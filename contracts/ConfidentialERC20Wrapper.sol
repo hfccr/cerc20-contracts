@@ -22,7 +22,7 @@ contract ConfidentialERC20Wrapper is ConfidentialToken {
 
     error UnwrapNotAllowed(address account);
 
-    constructor(address _baseERC20) ConfidentialToken("Wrapped cERC20", "wcERC20") {
+    constructor(address _baseERC20) ConfidentialToken("Wrapped cUSDC", "wcUSDC") {
         uint8 baseERCdecimals = IERC20extended(_baseERC20).decimals();
         require(baseERCdecimals <= 6, "Base ERC20 token must have 6 or less decimals");
         baseERC20 = IERC20(_baseERC20);
