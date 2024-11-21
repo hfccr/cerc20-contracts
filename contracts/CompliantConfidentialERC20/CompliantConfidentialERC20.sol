@@ -10,11 +10,9 @@ contract CompliantConfidentialERC20 is ConfidentialToken {
     Identity public identityContract;
     ITransferRules public transferRulesContract;
     constructor(
-        string memory name_,
-        string memory symbol_,
         address _identityContract,
         address _transferRulesContract
-    ) ConfidentialToken(name_, symbol_) {
+    ) ConfidentialToken("Compliant cUSDC", "ccUSDC") {
         identityContract = Identity(_identityContract);
         transferRulesContract = ITransferRules(_transferRulesContract);
     }
