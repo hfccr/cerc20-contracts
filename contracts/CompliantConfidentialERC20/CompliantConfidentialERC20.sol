@@ -18,6 +18,7 @@ contract CompliantConfidentialERC20 is ConfidentialToken {
         identityContract = Identity(_identityContract);
         transferRulesContract = ITransferRules(_transferRulesContract);
     }
+    mapping(address => bool) public auditor;
 
     // Overridden transfer function handling encrypted inputs
     function transfer(
@@ -47,6 +48,14 @@ contract CompliantConfidentialERC20 is ConfidentialToken {
         return true;
     }
 
+    function becomeAuditor() public {
+        auditor[msg.sender] = true;
+    }
+
+    function revokeAuditor() public {
+        auditor[msg.sender] = false;
+    }
+
     // Internal transfer function with encrypted balances
     function _transfer(address from, address to, euint64 _amount) internal {
         euint64 newBalanceFrom = TFHE.sub(_balances[from], _amount);
@@ -62,5 +71,18 @@ contract CompliantConfidentialERC20 is ConfidentialToken {
     // Allows admin to view any user's encrypted balance
     function adminViewUserBalance(address user) public onlyOwner {
         TFHE.allow(_balances[user], owner());
+    }
+
+    function auditorViewUserBalance(address user) public {
+        require(auditor[msg.sender], "Not an auditor");
+        TFHE.allow(_balances[user], msg.sender);
+    }
+
+    function isAuditor() public view returns (bool) {
+        return auditor[msg.sender];
+    }
+
+    function isAddressAuditor(address _address) public view returns (bool) {
+        return auditor[_address];
     }
 }
