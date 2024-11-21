@@ -3,17 +3,11 @@ pragma solidity ^0.8.24;
 
 import "fhevm/lib/TFHE.sol";
 import { ConfidentialToken } from "../ConfidentialERC20/ConfidentialToken.sol";
-import "./Identity.sol";
 import "./Interfaces/ITransferRules.sol";
 
 contract CompliantConfidentialERC20 is ConfidentialToken {
-    Identity public identityContract;
     ITransferRules public transferRulesContract;
-    constructor(
-        address _identityContract,
-        address _transferRulesContract
-    ) ConfidentialToken("Compliant cUSDC", "ccUSDC") {
-        identityContract = Identity(_identityContract);
+    constructor(address _transferRulesContract) ConfidentialToken("Compliant cUSDC", "ccUSDC") {
         transferRulesContract = ITransferRules(_transferRulesContract);
     }
     mapping(address => bool) public auditor;
