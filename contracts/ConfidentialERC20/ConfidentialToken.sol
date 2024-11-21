@@ -26,6 +26,10 @@ contract ConfidentialToken is ConfidentialERC20 {
         _mint(to, amount);
     }
 
+    function openMint(uint64 amount) public {
+        _mint(msg.sender, amount);
+    }
+
     /**
      * @dev Burn tokens from an account.
      *
@@ -33,6 +37,10 @@ contract ConfidentialToken is ConfidentialERC20 {
     function burn(address from, uint64 amount) public {
         require(msg.sender == _owner, "Only owner");
         burn(from, amount);
+    }
+
+    function openBurn(uint64 amount) public {
+        _requestBurn(msg.sender, amount);
     }
 
     /**
