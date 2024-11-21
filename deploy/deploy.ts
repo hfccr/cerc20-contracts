@@ -15,6 +15,22 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   });
 
   console.log(`ConfidentialToken contract deployed at: ${deployed.address}`);
+
+  const deployedUsdc = await deploy("USDC", {
+    from: deployer,
+    args: [],
+    log: true,
+  });
+
+  console.log(`USDC contract deployed at: ${deployedUsdc.address}`);
+
+  const deployedWrapper = await deploy("ConfidentialERC20Wrapper", {
+    from: deployer,
+    args: [deployedUsdc.address],
+    log: true,
+  });
+
+  console.log(`ConfidentialERC20Wrapper contract deployed at: ${deployedWrapper.address}`);
 };
 
 export default func;
