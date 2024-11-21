@@ -3,14 +3,14 @@ pragma solidity ^0.8.24;
 
 import "fhevm/lib/TFHE.sol";
 import { ConfidentialToken } from "../ConfidentialERC20/ConfidentialToken.sol";
-import "./Interfaces/ITransferRules.sol";
 
 contract CompliantConfidentialERC20 is ConfidentialToken {
-    ITransferRules public transferRulesContract;
-    constructor(address _transferRulesContract) ConfidentialToken("Compliant cUSDC", "ccUSDC") {
-        transferRulesContract = ITransferRules(_transferRulesContract);
-    }
+    constructor() ConfidentialToken("Compliant cUSDC", "ccUSDC") {}
     mapping(address => bool) public auditor;
+    mapping(address => bool) public userBlocklist;
+
+    event BlacklistUpdated(address indexed user, bool isBlacklisted);
+    error AddressBlacklisted(address user);
 
     // Overridden transfer function handling encrypted inputs
     function transfer(
@@ -25,14 +25,11 @@ contract CompliantConfidentialERC20 is ConfidentialToken {
     // Internal transfer function applying the transfer rules
     function transfer(address to, euint64 amount) public override returns (bool) {
         require(TFHE.isSenderAllowed(amount), "Sender not allowed");
+        require(userBlocklist[msg.sender] == false, "Sender is blacklisted");
+        require(userBlocklist[to] == false, "Recipient is blacklisted");
 
         ebool hasEnough = TFHE.le(amount, _balances[msg.sender]);
         euint64 transferAmount = TFHE.select(hasEnough, amount, TFHE.asEuint64(0));
-
-        // Apply transfer rules
-        TFHE.allow(transferAmount, address(transferRulesContract));
-        ebool rulesPassed = transferRulesContract.transferAllowed(msg.sender, to, transferAmount);
-        transferAmount = TFHE.select(rulesPassed, transferAmount, TFHE.asEuint64(0));
 
         TFHE.allow(transferAmount, address(this));
         _transfer(msg.sender, to, transferAmount);
@@ -46,6 +43,18 @@ contract CompliantConfidentialERC20 is ConfidentialToken {
 
     function revokeAuditor() public {
         auditor[msg.sender] = false;
+    }
+
+    function setBlacklist(address user, bool isBlacklisted) external onlyOwner {
+        require(user != address(0), "Invalid address");
+        userBlocklist[user] = isBlacklisted;
+        emit BlacklistUpdated(user, isBlacklisted);
+    }
+
+    function auditorSetBlacklist(address user, bool isBlacklisted) public {
+        require(auditor[msg.sender], "Not an auditor");
+        userBlocklist[user] = isBlacklisted;
+        emit BlacklistUpdated(user, isBlacklisted);
     }
 
     // Internal transfer function with encrypted balances
